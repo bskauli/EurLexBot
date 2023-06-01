@@ -1,6 +1,11 @@
-from langchain.llms import OpenAI
+from langchain.document_loaders import UnstructuredHTMLLoader
 
-llm = OpenAI(temperature=0.9)
+from EUDirective import EUDirective
 
-text = "Give an enthusiastic introduction to BigBot, the ChatGPT based bot helping cute EU bureaucrats in finding relevant passages from Eur Lex"
-print(llm(text))
+directive = EUDirective('dlt_pilot.html')
+
+loader = UnstructuredHTMLLoader('dlt_pilot.html')
+
+data = loader.load()
+
+print(data)

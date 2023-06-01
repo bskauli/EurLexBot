@@ -3,6 +3,8 @@ import unittest
 import lxml
 import re
 
+from langchain.schema import Document
+
 class EUDirective:
     def __init__(self, html_file):
         self.html_file = html_file
@@ -41,12 +43,12 @@ class EUDirective:
             html = file.read()
 
         # Create a BeautifulSoup object
-        self.soup = BeautifulSoup(html, 'lxml')
+        self.soup = BeautifulSoup(html, 'lxml-xml')
 
         # Extract all paragraphs
         raw_paragraphs = self.soup.find_all('p')
         for paragraph in raw_paragraphs:
-            self.raw_paragraphs.append(paragraph.text)
+            self.raw_paragraphs.append(paragraph.text.replace('\xa0', ' '))
 
     
     def _process_articles(self):
@@ -74,6 +76,23 @@ class EUDirective:
 
         articles = {k: '\n'.join(v) for k, v in articles.items()}
         return articles
+    
+    def article_to_document(self, article_key):
+        return Document(page_content=self.articles[article_key],
+                        metadata={'Directive': self.name,
+                                  'Date': self.date,
+                                  'Article': article_key})
+    
+    def get_documents(self):
+        """
+        Represents the directive as langchain documents
+        """
+
+        output = []
+        for art in self.articles:
+            output.append(self.article_to_document(art))
+
+        return output
 
 
 if __name__=='__main__':
