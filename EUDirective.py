@@ -8,7 +8,6 @@ from langchain.schema import Document
 class EUDirective:
     def __init__(self, html_file):
         self.html_file = html_file
-        self.name = None
         self.soup = None
         self.raw_paragraphs = []
         self.articles = {}
@@ -79,7 +78,7 @@ class EUDirective:
     
     def article_to_document(self, article_key):
         return Document(page_content=self.articles[article_key],
-                        metadata={'Directive': self.name,
+                        metadata={'Directive': self.title,
                                   'Date': self.date,
                                   'Article': article_key})
     
