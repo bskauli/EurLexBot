@@ -1,5 +1,7 @@
 import langchain
 
+import nltk.data
+
 from langchain.embeddings import FakeEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
