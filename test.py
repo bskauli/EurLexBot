@@ -17,7 +17,7 @@ class SentenceSplitter(langchain.text_splitter.TextSplitter):
         self.chunk_overlap=200
 
     def split_text(self, documents):
-        return [Document(page_content=s, metadata = d.metadata) for d in documents for s in self.tokenizer.tokenize(d.page_content)]
+        return [Document(page_content=s, metadata = d.metadata) for d in documents for s in self.tokenizer.tokenize(d)]
 
 directive = EUDirective('dlt_pilot.html')
 
