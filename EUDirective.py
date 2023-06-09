@@ -34,11 +34,8 @@ class EUDirective:
         
         title_elements = self.soup.find_all('p', is_title)
 
-        title = title_elements[0].text
-
-        start_index = _title_start_index(self.raw_paragraphs)
-        return '\n'.join(self.raw_paragraphs[start_index:start_index+3])
-
+        return title_elements[0].text
+    
     def _find_date(self):
         for p in self.raw_paragraphs:
             if p.startswith('of '):
