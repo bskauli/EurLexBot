@@ -12,6 +12,12 @@ class EUDirective:
         self.raw_paragraphs = []
         self.articles = {}
 
+        self.annexes = []
+
+        self.title_classes = ['doc-ti', 'oj-doc-ti']
+
+        self.article_classes = ['oj-ti-art', 'ti-art']
+
         # Parse the HTML file
         self._parse_html()
 
@@ -21,12 +27,15 @@ class EUDirective:
         self.articles = self._process_articles()
 
     def _find_title(self):
-        def _title_start_index(paragraphs):
-            for i, p in enumerate(paragraphs):
-                if p.startswith('REGULATION'):
-                    return i
-            raise ValueError('No paragraph starts with REGULATION')
+        def is_title(element):
+            if element in self.title_classes:
+                return True
+            return False
         
+        title_elements = self.soup.find_all('p', is_title)
+
+        title = title_elements[0].text
+
         start_index = _title_start_index(self.raw_paragraphs)
         return '\n'.join(self.raw_paragraphs[start_index:start_index+3])
 
