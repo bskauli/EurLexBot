@@ -14,19 +14,20 @@ class EUDirective:
 
         self.annexes = []
 
-        self.title_classes = ['doc-ti', 'oj-doc-ti']
+        self.title_classes = {'doc-ti', 'oj-doc-ti'}
 
-        self.article_classes = ['oj-ti-art', 'ti-art']
+        self.article_classes = {'oj-ti-art', 'ti-art'}
+
+        self.directive_end_classes = {'oj-final', 'final', 'signatory', 'oj-signatory'}
 
         # Parse the HTML file
         self._parse_html()
 
-        self.title = self._find_title()
-        self.date = self._find_date()
+        self.title, self.date, self.annexes = self._find_metadata()
 
         self.articles = self._process_articles()
 
-    def _find_title(self):
+    def _find_metadata(self):
         def is_title(element):
             if element in self.title_classes:
                 return True
@@ -34,13 +35,10 @@ class EUDirective:
         
         title_elements = self.soup.find_all('p', is_title)
 
-        return title_elements[0].text
-    
-    def _find_date(self):
-        for p in self.raw_paragraphs:
-            if p.startswith('of '):
-                return p[3:]
-        raise ValueError('No date was found in the HTML')
+        title = title_elements[0].text
+        date = title_elements[1].text[3:]
+        annexes = [t.text for t in title_elements if t.text.startswith('ANNEX')]
+        return title, date, annexes
 
     def _parse_html(self):
         # Read the HTML file
@@ -53,7 +51,7 @@ class EUDirective:
         # Extract all paragraphs
         raw_paragraphs = self.soup.find_all('p')
         for paragraph in raw_paragraphs:
-            self.raw_paragraphs.append(paragraph.text.replace('\xa0', ' '))
+            self.raw_paragraphs.append(paragraph.text)
 
     
     def _process_articles(self):
@@ -61,24 +59,30 @@ class EUDirective:
 
         end_patterns = [r'This\sRegulation\sshall\sbe\sbinding\sin\sits\sentirety\sand\sdirectly\sapplicable\sin\sall\sMember\sStates.']
 
-        current_article = []
+        current_article_text = []
+        current_article_name = ''
         in_article = False
         articles = {}
-        for p in self.raw_paragraphs:
-            if re.match(start_pattern, p):
-                current_article = []
-                in_article=True
-                articles[p] = current_article
+        for p in self.soup.find_all('p'):
+            if p.attrs.get('class', '') in self.article_classes:
+                print(f"Starting article {p.text}. Currently in article: {in_article}")
+                if in_article:
+                    articles[current_article_name] = current_article_text
+                in_article = True
+                current_article_text = []
+                current_article_name = p.text.replace('\xa0', ' ')
                 continue
 
-            if any(map(lambda pat: re.match(pat, p), end_patterns)):
-                in_article = False
-                current_article = []
-                continue
+            if p.attrs.get('class', '') in self.directive_end_classes:
+                if in_article:
+                    articles[current_article_name] = current_article_text
+                break
 
             if in_article:
-                current_article.append(p)
+                current_article_text.append(p.text.replace('\xa0', ' '))
 
+        for k, v in articles.items():
+            print(len(v))
         articles = {k: '\n'.join(v) for k, v in articles.items()}
         return articles
     
@@ -103,5 +107,5 @@ class EUDirective:
 if __name__=='__main__':
     directive = EUDirective('dlt_pilot.html')
 
-    print(len(directive._process_articles()))
-    print(directive._process_articles()['Article 9'])
+    print(directive.articles.keys())
+    #print(directive.articles[list(directive.articles.keys())[18]])

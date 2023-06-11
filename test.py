@@ -15,9 +15,20 @@ class SentenceSplitter(langchain.text_splitter.TextSplitter):
         self.tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
         self.max_chunk_size = 4000
         self.chunk_overlap=200
+            
+
 
     def split_text(self, documents):
-        return [s for d in documents for s in self.tokenizer.tokenize(d)]
+        def aggregate_strings_to_limit(strings, limit):
+            current_string = ''
+            for s in strings:
+                if len(current_string + s) > limit:
+                    outstring = current_string + s
+                    current_string = ''
+                    yield outstring
+        return [s for s in aggregate_strings_to_limit(
+                                      [s for d in documents for s in self.tokenizer.tokenize(d)],
+                                      10)]
 
 directive = EUDirective('dlt_pilot.html')
 
